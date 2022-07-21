@@ -56,22 +56,21 @@ defmodule Hooked.WSConnection do
     end
   end
 
-  def start(conn, token, uid) do
-    with {:ok, url}      <- not_nil(Map.get(conn.body_params, "url"), {:malformed_data, "'url' needs to be provided in the JSON encoded body."}),
-         {:ok, callback} <- not_nil(Map.get(conn.body_params, "callback"), {:malformed_data, "'callback' needs to be provided in the JSON encoded body."}),
-         cid             <- Base.encode16(:crypto.hash(:sha256, "#{url}#{callback}#{token}")),
-         {:ok, _}        <- expect_nil(whereis(cid), {:conflict, "Connection between this websocket and callback is already open."}),
-         spec            <- {Hooked.WSConnection, [url, %{uid: uid, callback: callback}, cid]},
-         {:ok}           <- start_child(spec) do
-        {:ok, %{cid: cid}}
-      else
-        {:error, reason} -> reason
-      end
+  def start(url, callback, token, uid) do
+    cid = Base.encode16(:crypto.hash(:sha256, "#{url}#{callback}#{token}"))
+    child_spec = {Hooked.WSConnection, [url, %{uid: uid, callback: callback}, cid]}
+
+    case DynamicSupervisor.start_child(Hooked.WSSupervisor, child_spec) do
+      {:ok, _pid} ->
+        :ok
+
+      {:error, reason} ->
+        {:error, "Failed to start connection."}
+    end
   end
 
-  def stop(conn) do
-    with {:ok, cid} <- not_nil(Map.get(conn.path_params, "cid"), {:malformed_data, "'cid' is not specified in the url. Expected '/:cid'"}),
-         {:ok, pid} <- not_nil(whereis(cid), {:not_found, "This connection does not exist."}) do
+  def stop(cid) do
+    with {:ok, pid} <- not_nil(whereis(cid), {:not_found, "This connection does not exist."}) do
       Process.exit(pid, :kill)
       {:ok, %{}}
     else
@@ -79,18 +78,16 @@ defmodule Hooked.WSConnection do
     end
   end
 
-  def info(conn) do
-    with {:ok, cid} <- not_nil(Map.get(conn.path_params, "cid"), {:malformed_data, "'cid' is not specified in the url. Expected '/:cid'"}),
-         {:ok, pid} <- not_nil(whereis(cid), {:not_found, "This connection does not exist."}) do
+  def info(cid) do
+    with {:ok, pid} <- not_nil(whereis(cid), {:not_found, "This connection does not exist."}) do
       {:ok, %{cid: cid}}
     else
       {:error, reason} -> reason
     end
   end
 
-  def send(conn) do
-    with {:ok, cid} <- not_nil(Map.get(conn.path_params, "cid"), {:malformed_data, "'cid' is not specified in the url. Expected '/:cid'"}),
-         {:ok, pid} <- not_nil(whereis(cid), {:not_found, "This connection does not exist."}) do
+  def send(cid) do
+    with {:ok, pid} <- not_nil(whereis(cid), {:not_found, "This connection does not exist."}) do
       {:not_authorized, "TODO: Not Implemented Yet"}
     else
       {:error, reason} -> reason

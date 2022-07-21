@@ -5,36 +5,47 @@ defmodule Hooked.Router do
   plug(Plug.Parsers, parsers: [:json], pass: ["application/json"], json_decoder: Jason)
   plug(:dispatch)
 
-  # get "/" do
-  #   conn
-  #   |> handle_extract_auth(fn (token) ->
-  #     {:ok, pong} = Redix.command(:redix, ["PING"])
-  #     {:ok, %{pong: pong}}
-  #   end)
-  #   |> handle_response(conn)
-  # end
-
   post "/" do
-    conn
-    |> handle_extract_auth(&Hooked.WSConnection.start(conn, &1, &2))
+    case conn.body_params do
+      %{"url" => url, "callback" => callback} ->
+        conn
+        |> handle_extract_auth(fn token, uid -> Hooked.WSConnection.start(url, callback, token, uid) end)
+      _ ->
+        {:malformed_data, "'url' and 'callback' parameters are required"}
+    end
     |> handle_response(conn)
   end
 
   get "/:cid" do
-    conn
-    |> handle_extract_auth(fn _, _ -> Hooked.WSConnection.info(conn) end)
+    case conn.path_params do
+      %{"cid" => cid} ->
+        conn
+        |> handle_extract_auth(fn token, uid -> Hooked.WSConnection.info(cid) end)
+      _ ->
+        {:malformed_data, "'cid' parameter is required"}
+    end
     |> handle_response(conn)
   end
 
   post "/:cid" do
-    conn
-    |> handle_extract_auth(fn _, _ -> Hooked.WSConnection.send(conn) end)
+    case conn.path_params do
+      %{"cid" => cid} ->
+        conn
+        |> handle_extract_auth(fn token, uid -> Hooked.WSConnection.send(cid) end)
+      _ ->
+        {:malformed_data, "'cid' parameter is required"}
+    end
     |> handle_response(conn)
   end
 
   delete "/:cid" do
-    conn
-    |> handle_extract_auth(fn _, _ -> Hooked.WSConnection.stop(conn) end)
+    case conn.path_params do
+      %{"cid" => cid} ->
+        conn
+        |> handle_extract_auth(fn token, uid -> Hooked.WSConnection.stop(cid) end)
+      _ ->
+        {:malformed_data, "'cid' parameter is required"}
+    end
     |> handle_response(conn)
   end
 
