@@ -20,7 +20,7 @@ defmodule Hooked.Router do
     case conn.path_params do
       %{"cid" => cid} ->
         conn
-        |> handle_extract_auth(fn token, uid -> Hooked.WSConnection.info(cid) end)
+        |> handle_extract_auth(fn _, _ -> Hooked.WSConnection.info(cid) end)
       _ ->
         {:malformed_data, "'cid' parameter is required"}
     end
@@ -31,7 +31,7 @@ defmodule Hooked.Router do
     case conn.path_params do
       %{"cid" => cid} ->
         conn
-        |> handle_extract_auth(fn token, uid -> Hooked.WSConnection.send(cid) end)
+        |> handle_extract_auth(fn _, _ -> Hooked.WSConnection.send(cid) end)
       _ ->
         {:malformed_data, "'cid' parameter is required"}
     end
@@ -42,7 +42,7 @@ defmodule Hooked.Router do
     case conn.path_params do
       %{"cid" => cid} ->
         conn
-        |> handle_extract_auth(fn token, uid -> Hooked.WSConnection.stop(cid) end)
+        |> handle_extract_auth(fn _, _ -> Hooked.WSConnection.stop(cid) end)
       _ ->
         {:malformed_data, "'cid' parameter is required"}
     end
