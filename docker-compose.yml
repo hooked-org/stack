@@ -21,6 +21,8 @@ services:
     restart: always
     env_file: .env.prod
     command: /app/_build/prod/rel/hooked/bin/hooked start
+    ports:
+      - '8080:8080'
     expose:
       - "8080"
 
@@ -33,5 +35,7 @@ services:
     restart: always
     env_file: .env.prod
     command: npm run start
+    ports:
+      - '8081:8081'
     expose:
       - "8081"
