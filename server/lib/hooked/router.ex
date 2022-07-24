@@ -1,15 +1,26 @@
 defmodule Hooked.Router do
   use Plug.Router
 
+  defp copy_req_body(conn, _) do
+    {:ok, body, _} = Plug.Conn.read_body(conn)
+    Plug.Conn.put_private(conn, :raw_body, body)
+  end
+
   plug(:match)
-  plug(Plug.Parsers, parsers: [:json], pass: ["application/json"], json_decoder: Jason)
+  plug :copy_req_body
+  plug(
+    Plug.Parsers,
+    parsers: [:json],
+    pass: ["application/json", "text/*"],
+    json_decoder: Jason
+  )
   plug(:dispatch)
 
   post "/" do
     case conn.body_params do
       %{"url" => url, "callback" => callback} ->
         conn
-        |> handle_extract_auth(fn token, uid -> Hooked.WSConnection.start(url, callback, token, uid) end)
+        |> handle_extract_auth(fn token, uid, project -> Hooked.WSConnection.start(url, callback, token, uid, project) end)
       _ ->
         {:malformed_data, "'url' and 'callback' parameters are required"}
     end
@@ -20,7 +31,7 @@ defmodule Hooked.Router do
     case conn.path_params do
       %{"cid" => cid} ->
         conn
-        |> handle_extract_auth(fn _, _ -> Hooked.WSConnection.info(cid) end)
+        |> handle_extract_auth(fn _, _, _ -> Hooked.WSConnection.info(cid) end)
       _ ->
         {:malformed_data, "'cid' parameter is required"}
     end
@@ -31,7 +42,7 @@ defmodule Hooked.Router do
     case conn.path_params do
       %{"cid" => cid} ->
         conn
-        |> handle_extract_auth(fn _, _ -> Hooked.WSConnection.send(cid) end)
+        |> handle_extract_auth(fn _, _, _ -> Hooked.WSConnection.send(cid, conn.private[:raw_body]) end)
       _ ->
         {:malformed_data, "'cid' parameter is required"}
     end
@@ -42,7 +53,7 @@ defmodule Hooked.Router do
     case conn.path_params do
       %{"cid" => cid} ->
         conn
-        |> handle_extract_auth(fn _, _ -> Hooked.WSConnection.stop(cid) end)
+        |> handle_extract_auth(fn _, _, _ -> Hooked.WSConnection.stop(cid) end)
       _ ->
         {:malformed_data, "'cid' parameter is required"}
     end
@@ -59,8 +70,8 @@ defmodule Hooked.Router do
     case conn
          |> get_req_header("authorization")
          |> Hooked.Authentication.validate_bearer_header() do
-      {:ok, token, uid} ->
-        success_lambda.(token, uid)
+      {:ok, token, uid, project} ->
+        success_lambda.(token, uid, project)
 
       {:error, _} ->
         {:malformed_data, "Missing/Invalid authorization header"}
@@ -85,7 +96,7 @@ defmodule Hooked.Router do
         {:not_authorized, message} ->
           %{code: 401, message: Jason.encode!(%{reason: message}), json: true}
 
-        {:server_error, _} ->
+        {:server_error} ->
           %{code: 500, message: Jason.encode!(%{reason: "An error occurred internally"}), json: true}
 
         _ ->

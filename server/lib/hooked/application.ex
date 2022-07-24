@@ -12,6 +12,15 @@ defmodule Hooked.Application do
       {Redix, host: "0.0.0.0", port: 56379, name: :redix},
       {Registry, keys: :unique, name: :ws_registry},
       {Finch, name: :callback_finch},
+      {
+        MyXQL,
+        username: System.get_env("DB_USERNAME"),
+        password: System.get_env("DB_PASSWORD"),
+        hostname: System.get_env("DB_HOST"),
+        database: System.get_env("DB_DATABASE"),
+        ssl: true,
+        name: :myxql
+      },
       {DynamicSupervisor, strategy: :one_for_one, name: Hooked.WSSupervisor}
     ]
 

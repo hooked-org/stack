@@ -22,11 +22,12 @@ defmodule Hooked.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:myxql, "~> 0.6.0"},
       {:websockex, "~> 0.4.3"},
       {:redix, "~> 1.1"},
       {:bandit, ">= 0.5.0"},
       {:jason, "~> 1.3"},
-      {:finch, "~> 0.12"}
+      {:finch, "~> 0.12"},
     ]
   end
 end

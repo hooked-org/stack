@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model connections {
+  id                Int    @id @default(autoincrement())
+  user              Int
+  service           String @db.VarChar(63)
+  connected_account String @db.VarChar(63)
+}
+
+model projects {
+  id           Int    @id @default(autoincrement())
+  owner        Int
+  name         String @db.VarChar(127)
+  access_token String @db.VarChar(45)
+  region       String @db.VarChar(32)
+}
+
+model usage {
+  id       String @id @db.VarChar(32)
+  user     Int
+  period   Int
+  received Int
+  project  Int
+  sent     Int
+}
+
+model users {
+  id                 Int     @id @default(autoincrement())
+  name               String  @db.VarChar(127)
+  stripe_customer_id Int?
+  email              String  @db.VarChar(255)
+  tier               Int
+  pwhash             String? @db.VarChar(63)
+  token              String  @db.VarChar(64)
+}

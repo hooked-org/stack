@@ -8,14 +8,12 @@ defmodule Hooked.Authentication do
     case first_item
          |> String.split(" ") do
       ["Bearer", token] ->
-        {:ok, uid} = Redix.command(:redix, ["GET", "bearer:#{token}"])
-        if uid == nil do
-          # {:error, :not_found}
-          {:ok, token, "none"}
-        else
-          {:ok, token, uid}
+        case MyXQL.query(:myxql, "SELECT owner,id FROM projects WHERE access_token = ? LIMIT 1", [token]) do
+          {:ok, %MyXQL.Result{rows: [[uid,id]]}} ->
+            {:ok, token, uid, id}
+          _ ->
+            {:error, :not_found}
         end
-
       _ ->
         do_validate_bearer_header(rest)
     end
