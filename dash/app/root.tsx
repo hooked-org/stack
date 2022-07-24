@@ -26,12 +26,16 @@ export const meta: MetaFunction = () => ({
 })
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const user = await userFromCookie(request)
-  return json({ user })
+  try {
+    const user = await userFromCookie(request)
+    return json({ authenticated: true, user })
+  } catch(e) {
+    return json({ authenticated: false })
+  }
 };
 
 export default function App() {
-  const { user } = useLoaderData()
+  const { user, authenticated } = useLoaderData()
   return (
     <html lang="en">
       <head>
@@ -39,7 +43,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        { user ? <Outlet /> : <LoginPage /> }
+        { authenticated ? <Outlet context={user} /> : <LoginPage /> }
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

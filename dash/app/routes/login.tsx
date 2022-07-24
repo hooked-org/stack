@@ -28,7 +28,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     const state = url.searchParams.get("state")
     const cookie = await getCookie(request)
     if (cookie.state === state && code) {
-      const coderes = await fetch(`https://github.com/login/oauth/access_token?client_id=96a68011e4bce144b225&client_secret=13cf73aa77c28ea974a9f78869aa6d4bf59ac8b8&code=${code}`, {
+      const coderes = await fetch(`https://github.com/login/oauth/access_token?client_id=${process.env.GITHUB_CLIENT_ID}&client_secret=${process.env.GITHUB_CLIENT_SECRET}&code=${code}`, {
         method: "POST",
         headers: {
           "Accept": "application/json",
@@ -44,6 +44,7 @@ export const loader: LoaderFunction = async ({ request }) => {
         let user: users
         if (connectedUser?.user) {
           user = await prisma.users.findFirstOrThrow({ where: { id: connectedUser.user } })
+          console.log("user found")
           if (!user) return redirect('/login')
         } else {
           const token = getRandomKey(32)
@@ -73,16 +74,17 @@ export const loader: LoaderFunction = async ({ request }) => {
         })
       } catch(e) {
         console.log(e)
+        return redirect('/login')
       }
     }
   }
-  return redirect('/login')
+  return null
 };
 
 export default function LoginPage() {
   return (
     <div className="flex flex-col items-center justify-center w-full">
-      <div className="flex flex-col lg:flex-row items-center justify-center h-4/5 w-full relative">
+      <div className="flex flex-col lg:flex-row items-center justify-center h-full w-full relative">
         <div className="flex flex-col items-center lg:items-start">
           <h1 className="text-gray-100 font-bold text-7xl">hooked.sh</h1>
           <h2 className="text-gray-200 text-2xl">WebSockets over HTTP</h2>
