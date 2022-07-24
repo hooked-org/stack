@@ -1,0 +1,19 @@
+{
+  "name": "hooked.sh",
+  "version": "0.0.1",
+  "description": "Websockethooks",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hooked-org/js.git"
+  },
+  "author": "Leah Lundqvist",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hooked-org/js/issues"
+  },
+  "homepage": "https://github.com/hooked-org/js#readme"
+}
