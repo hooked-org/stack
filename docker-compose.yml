@@ -33,6 +33,8 @@ services:
     build:
       context: ./dash
       dockerfile: Dockerfile
+      args:
+        - DATABASE_URL=${DATABASE_URL}
     restart: always
     env_file: .env.prod
     command: npm run start
