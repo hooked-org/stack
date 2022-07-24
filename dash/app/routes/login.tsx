@@ -10,7 +10,7 @@ import type { users } from "@prisma/client";
 
 export async function action({ request }: ActionArgs) {
   const state = Math.random().toString(36).substring(2)
-  const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&scope=user&state=${state}`
+  const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&scope=user,user:email&state=${state}`
   const cookie = await getCookie(request)
   cookie['state'] = state
   return redirect(url, {
@@ -40,6 +40,13 @@ export const loader: LoaderFunction = async ({ request }) => {
       try {
         const gh_user = await userres.json()
         if (!gh_user.id) return redirect('/login')
+        if (!gh_user.email) {
+          const emailres = await fetch(`https://api.github.com/user/emails`, { headers: { Authorization: `token ${codejson.access_token}` } })
+          const emails = await emailres.json()
+          if (emails.length > 0) {
+            gh_user.email = emails[0].email
+          }
+        }
         const connectedUser = await prisma.connections.findFirst({ where: { service: "github", connected_account: String(gh_user.id) } })
         let user: users
         if (connectedUser?.user) {
