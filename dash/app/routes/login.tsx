@@ -10,7 +10,7 @@ import type { users } from "@prisma/client";
 
 export async function action({ request }: ActionArgs) {
   const state = Math.random().toString(36).substring(2)
-  const url = `https://github.com/login/oauth/authorize?client_id=96a68011e4bce144b225&scope=user&state=${state}`
+  const url = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&scope=user&state=${state}`
   const cookie = await getCookie(request)
   cookie['state'] = state
   return redirect(url, {
