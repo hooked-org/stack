@@ -30,7 +30,11 @@ export const loader: LoaderFunction = async ({ request }) => {
     const user = await userFromCookie(request)
     return json({ authenticated: true, user })
   } catch(e) {
-    return json({ authenticated: false })
+    if (new URL(request.url).pathname !== '/login') {
+      return redirect('/login')
+    } else {
+      return json({ authenticated: false })
+    }
   }
 };
 

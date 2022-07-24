@@ -9,8 +9,8 @@ defmodule Hooked.Application do
   def start(_type, _args) do
     children = [
       {Bandit, scheme: :http, plug: Hooked.Router, options: [port: 8080]},
-      {Redix, host: "0.0.0.0", port: 56379, name: :redix},
       {Registry, keys: :unique, name: :ws_registry},
+      {Registry, keys: :unique, name: :usage_registry},
       {Finch, name: :callback_finch},
       {
         MyXQL,
@@ -21,7 +21,8 @@ defmodule Hooked.Application do
         ssl: true,
         name: :myxql
       },
-      {DynamicSupervisor, strategy: :one_for_one, name: Hooked.WSSupervisor}
+      {DynamicSupervisor, strategy: :one_for_one, name: Hooked.WSSupervisor},
+      {DynamicSupervisor, strategy: :one_for_one, name: Hooked.UsageSupervisor}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

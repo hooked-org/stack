@@ -1,4 +1,5 @@
 var http = require('http')
+var i = 0;
 http.createServer(function (req, res) {
   if (req.method.toLowerCase() == 'post') {
     let data = ''
@@ -6,7 +7,7 @@ http.createServer(function (req, res) {
       data += chunk
     })
     req.on('end', () => {
-      console.log("POST - " + data)
+      console.log(i++ + " | POST - " + data)
       res.end()
     });
   } else {
