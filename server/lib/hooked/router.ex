@@ -17,8 +17,10 @@ defmodule Hooked.Router do
   plug(:dispatch)
 
   post "/" do
+    IO.puts "Router: post /"
     case conn.body_params do
       %{"url" => url, "callback" => callback} ->
+        IO.puts "Router: post /: url: #{url}, callback: #{callback}"
         conn
         |> handle_extract_auth(fn token, uid, project -> Hooked.WSConnection.start(url, callback, token, uid, project) end)
       _ ->

@@ -8,8 +8,10 @@ defmodule Hooked.Authentication do
     case first_item
          |> String.split(" ") do
       ["Bearer", token] ->
+        IO.puts "Authentication: validate_bearer_header: token: #{token}"
         case MyXQL.query(:myxql, "SELECT owner,id FROM projects WHERE access_token = ? LIMIT 1", [token]) do
           {:ok, %MyXQL.Result{rows: [[uid,id]]}} ->
+            IO.puts "Authentication: validate_bearer_header: uid: #{uid}, id: #{id}"
             {:ok, token, uid, id}
           _ ->
             {:error, :not_found}

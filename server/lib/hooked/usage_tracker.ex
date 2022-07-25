@@ -6,10 +6,12 @@ defmodule Hooked.UsageTracker do
   end
 
   def start_link(access_token) do
+    IO.puts "UsageTracker: start_link: #{access_token}"
     GenServer.start_link(__MODULE__, access_token, name: via_tuple(access_token))
   end
 
   def init(access_token) do
+    IO.puts "UsageTracker: init: #{access_token}"
     state = %State{access_token: access_token}
     period = (DateTime.utc_now.year * 100) + DateTime.utc_now.month
 
@@ -32,6 +34,7 @@ defmodule Hooked.UsageTracker do
         LIMIT 1
     """, [period, access_token]) do
       {:ok, %MyXQL.Result{rows: [[uid, project, sent, received, tier]]}} ->
+        IO.puts "UsageTracker: init: uid: #{uid}, project: #{project}, sent: #{sent}, received: #{received}, tier: #{tier}"
         {
           :ok,
           state
