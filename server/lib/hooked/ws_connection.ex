@@ -1,9 +1,9 @@
 defmodule Hooked.WSConnection do
   use WebSockex, restart: :temporary
 
-  def start_link([url, state, cid]) do
-    IO.puts "WSConnection: start_link: #{url}, #{inspect state}, #{cid}"
-    WebSockex.start_link(url, __MODULE__, state, name: via_tuple(cid), handle_initial_conn_failure: true)
+  def start_link([url, state]) do
+    IO.puts "WSConnection: start_link: #{url}, #{inspect state}"
+    WebSockex.start_link(url, __MODULE__, state, name: via_tuple(state.cid), handle_initial_conn_failure: true)
   end
 
   defp via_tuple(cid), do: {:via, Registry, {:ws_registry, cid}}
@@ -12,7 +12,7 @@ defmodule Hooked.WSConnection do
     IO.puts "WSConnection: handle_frame: #{inspect msg}"
     usage = Hooked.UsageTracker.increment(:received, state.token)
     if usage.received + usage.sent < usage.tier do
-      Finch.build(:post, state.callback, [], msg) |> Finch.request(:callback_finch)
+      Finch.build(:post, state.callback, [{"x-hooked-cid", state.cid}], msg) |> Finch.request(:callback_finch)
     end
     {:ok, state}
   end
@@ -42,20 +42,32 @@ defmodule Hooked.WSConnection do
     end
   end
 
+  defp expect_nil(val, reason) do
+    if val == nil or val == "" do
+      {:ok, val}
+    else
+      {:error, reason}
+    end
+  end
+
   def start(url, callback, token, uid, project) do
     IO.puts "WSConnection: start: #{url}, #{callback}, #{token}, #{uid}, #{project}"
     cid = Base.encode16(:crypto.hash(:sha256, "#{url}#{callback}#{token}"))
     IO.puts "WSConnection: start: cid: #{cid}"
-    child_spec = {Hooked.WSConnection, [url, %{uid: uid, token: token, callback: callback, project: project}, cid]}
-    IO.puts "WSConnection: start: reached start_child"
-    case DynamicSupervisor.start_child(Hooked.WSSupervisor, child_spec) do
-      {:ok, _pid} ->
-        IO.puts("WSConnection: start: child started")
-        {:ok, %{id: cid}}
+    with {:ok, _} <- expect_nil(whereis(cid), {:error}) do
+      child_spec = {Hooked.WSConnection, [url, %{uid: uid, token: token, callback: callback, project: project, cid: cid}]}
+      IO.puts "WSConnection: start: reached start_child"
+      case DynamicSupervisor.start_child(Hooked.WSSupervisor, child_spec) do
+        {:ok, _pid} ->
+          IO.puts("WSConnection: start: child started")
+          {:ok, %{id: cid}}
 
-      {:error, error} ->
-        IO.puts("WSConnection: start: child failed to start #{error}")
-        {:error, "Failed to start connection."}
+        {:error, error} ->
+          IO.puts("WSConnection: start: child failed to start #{error}")
+          {:error, "Failed to start connection."}
+      end
+    else
+      {:error} -> {:conflict, %{id: cid, reason: "This connection already exists."}}
     end
   end
 

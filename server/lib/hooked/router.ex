@@ -90,7 +90,7 @@ defmodule Hooked.Router do
           %{code: 404, message: Jason.encode!(%{reason: message}), json: true}
 
         {:conflict, message} ->
-          %{code: 409, message: Jason.encode!(%{reason: message}), json: true}
+          %{code: 409, message: Jason.encode!(message), json: true}
 
         {:malformed_data, message} ->
           %{code: 400, message: Jason.encode!(%{reason: message}), json: true}
