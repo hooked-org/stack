@@ -146,8 +146,8 @@ defmodule Hooked.UsageTracker do
             IO.puts "UsageTracker: spawned"
             GenServer.call(pid, direction)
 
-          {:error, _} ->
-            IO.puts "UsageTracker: failed"
+          {:error, error} ->
+            IO.puts "UsageTracker: failed #{error}"
             {:error, "Failed to start connection."}
         end
       end
