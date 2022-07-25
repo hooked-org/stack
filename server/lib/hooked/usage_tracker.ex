@@ -25,7 +25,7 @@ defmodule Hooked.UsageTracker do
           IFNULL(SUM(usage.received), 0) as received,
           users.tier as tier
         FROM projects
-        LEFT OUTER JOIN usage
+        LEFT OUTER JOIN `usage`
             ON projects.owner = usage.user AND usage.period = ?
         LEFT OUTER JOIN users
             ON projects.owner = users.id
@@ -84,7 +84,7 @@ defmodule Hooked.UsageTracker do
     schedule_sync()
 
     MyXQL.query(:myxql, """
-      INSERT INTO usage (id, user, period, project, received, sent)
+      INSERT INTO `usage` (id, user, period, project, received, sent)
         VALUES (?,?,?,?,?,?)
         ON DUPLICATE KEY
         UPDATE received = received + ?, sent = sent + ?;
