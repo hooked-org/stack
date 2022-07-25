@@ -2,7 +2,7 @@ defmodule Hooked.WSConnection do
   use WebSockex, restart: :temporary
 
   def start_link([url, state, cid]) do
-    IO.puts "WSConnection: start_link: #{url}, #{state}, #{cid}"
+    IO.puts "WSConnection: start_link: #{url}, #{inspect state}, #{cid}"
     WebSockex.start_link(url, __MODULE__, state, name: via_tuple(cid), handle_initial_conn_failure: true)
   end
 
