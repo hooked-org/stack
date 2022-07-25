@@ -45,7 +45,8 @@ defmodule Hooked.UsageTracker do
           |> Map.put(:tier, tier)
         }
       {:error, error} ->
-        IO.puts "UsageTracker: get user data: error: #{error}"
+        IO.puts "UsageTracker: get user data: error:"
+        IO.puts inspect error
         {:error, :not_found}
     end
   end
@@ -147,7 +148,8 @@ defmodule Hooked.UsageTracker do
             GenServer.call(pid, direction)
 
           {:error, error} ->
-            IO.puts "UsageTracker: failed #{error}"
+            IO.puts "UsageTracker: failed"
+            IO.puts(inspect error)
             {:error, "Failed to start connection."}
         end
       end
