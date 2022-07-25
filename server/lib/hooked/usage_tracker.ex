@@ -44,8 +44,8 @@ defmodule Hooked.UsageTracker do
           |> Map.put(:received, received |> Decimal.round() |> Decimal.to_integer())
           |> Map.put(:tier, tier)
         }
-      _ ->
-        IO.puts "UsageTracker: init: failed to get user info"
+      {:error, error} ->
+        IO.puts "UsageTracker: get user data: error: #{error}"
         {:error, :not_found}
     end
   end
