@@ -2,6 +2,7 @@ defmodule Hooked.WSConnection do
   use WebSockex, restart: :temporary
 
   def start_link([url, state, cid]) do
+    IO.puts "WSConnection: start_link: #{url}, #{state}, #{cid}"
     WebSockex.start_link(url, __MODULE__, state, name: via_tuple(cid), handle_initial_conn_failure: true)
   end
 
@@ -22,6 +23,7 @@ defmodule Hooked.WSConnection do
   end
 
   def handle_disconnect(_, state) do
+    IO.puts "WSConnection: handle_disconnect: #{state.token}"
     :timer.sleep(15000)
     {:reconnect, state}
   end
@@ -40,6 +42,7 @@ defmodule Hooked.WSConnection do
   end
 
   def start(url, callback, token, uid, project) do
+    IO.puts "WSConnection: start: #{url}, #{callback}, #{token}, #{uid}, #{project}"
     cid = Base.encode16(:crypto.hash(:sha256, "#{url}#{callback}#{token}"))
     child_spec = {Hooked.WSConnection, [url, %{uid: uid, token: token, callback: callback, project: project}, cid]}
 
