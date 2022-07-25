@@ -12,7 +12,7 @@ defmodule Hooked.WSConnection do
     IO.puts "WSConnection: handle_frame: #{inspect msg}"
     usage = Hooked.UsageTracker.increment(:received, state.token)
     if usage.received + usage.sent < usage.tier do
-      Finch.build(:post, state.callback, [{"x-hooked-cid", state.cid}], msg) |> Finch.request(:callback_finch)
+      Finch.build(:post, state.callback, [{"content-type", "text/plain"}, {"x-hooked-cid", state.cid}], msg) |> Finch.request(:callback_finch)
     end
     {:ok, state}
   end
