@@ -45,11 +45,13 @@ defmodule Hooked.UsageTracker do
           |> Map.put(:tier, tier)
         }
       _ ->
+        IO.puts "UsageTracker: init: failed to get user info"
         {:error, :not_found}
     end
   end
 
   def handle_call(:sent, _from, state) do
+    IO.puts "UsageTracker: handle_call: :sent #{inspect state}"
     state = state
       |> Map.put(:sent, state.sent + 1)
       |> Map.put(:d_sent, state.d_sent + 1)
@@ -62,6 +64,7 @@ defmodule Hooked.UsageTracker do
   end
 
   def handle_call(:received, _from, state) do
+    IO.puts "UsageTracker: handle_call: :received #{inspect state}"
     state = state
       |> Map.put(:received, state.received + 1)
       |> Map.put(:d_received, state.d_received + 1)
@@ -74,6 +77,7 @@ defmodule Hooked.UsageTracker do
   end
 
   def handle_info(:sync, state) do
+    IO.puts "UsageTracker: handle_info: #{inspect state}"
     period = (DateTime.utc_now.year * 100) + DateTime.utc_now.month
 
     schedule_sync()
@@ -129,16 +133,21 @@ defmodule Hooked.UsageTracker do
   end
 
   def increment(direction, access_token) do
+    IO.puts "UsageTracker: increment: #{direction}, #{access_token}"
     case not_nil(whereis(access_token), {:not_found, "This connection does not exist."}) do
       {:ok, pid} ->
+        IO.puts "UsageTracker: process found"
         GenServer.call(pid, direction)
       _ ->
+        IO.puts "UsageTracker: none found for token, spawning new one"
         child_spec = {Hooked.UsageTracker, access_token}
         case DynamicSupervisor.start_child(Hooked.UsageSupervisor, child_spec) do
           {:ok, pid} ->
+            IO.puts "UsageTracker: spawned"
             GenServer.call(pid, direction)
 
           {:error, _} ->
+            IO.puts "UsageTracker: failed"
             {:error, "Failed to start connection."}
         end
       end
